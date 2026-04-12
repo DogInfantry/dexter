@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { notifyLanguageModelsUpdated } from '@/data/models';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, Brain, CheckCircle, Download, Play, RefreshCw, Server, Square, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -102,6 +103,7 @@ export function OllamaSettings() {
       });
       if (response.ok) {
         await fetchOllamaStatus();
+        notifyLanguageModelsUpdated();
       } else {
         const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
         setError(`Failed to start server: ${errorData.detail}`);
@@ -122,6 +124,7 @@ export function OllamaSettings() {
       });
       if (response.ok) {
         await fetchOllamaStatus();
+        notifyLanguageModelsUpdated();
       } else {
         const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
         setError(`Failed to stop server: ${errorData.detail}`);
@@ -213,6 +216,8 @@ export function OllamaSettings() {
                             if (attempts < 5 && status && !status.available_models.includes(modelName)) {
                               // Wait a bit longer and try again
                               setTimeout(() => refreshWithRetry(attempts + 1), 2000);
+                            } else if (status?.available_models.includes(modelName)) {
+                              notifyLanguageModelsUpdated();
                             }
                           } else if (attempts < 5) {
                             // If fetch failed, retry
@@ -328,6 +333,7 @@ export function OllamaSettings() {
       });
       if (response.ok) {
         await fetchOllamaStatus();
+        notifyLanguageModelsUpdated();
       } else {
         const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
         setError(`Failed to delete ${modelName}: ${errorData.detail}`);
@@ -449,6 +455,8 @@ export function OllamaSettings() {
                     if (attempts < 5 && status && !status.available_models.includes(modelName)) {
                       // Wait a bit longer and try again
                       setTimeout(() => refreshWithRetry(attempts + 1), 2000);
+                    } else if (status?.available_models.includes(modelName)) {
+                      notifyLanguageModelsUpdated();
                     }
                   } else if (attempts < 5) {
                     // If fetch failed, retry

@@ -126,8 +126,7 @@ class OllamaService:
         
         Returns only models that are:
         1. Server is running
-        2. Model is downloaded locally  
-        3. Model is in our recommended list (OLLAMA_MODELS)
+        2. Model is downloaded locally
         """
         try:
             status = await self.check_ollama_status()
@@ -504,16 +503,19 @@ class OllamaService:
         # Import OLLAMA_MODELS here to avoid circular imports
         from src.llm.models import OLLAMA_MODELS
         
-        api_models = []
-        for ollama_model in OLLAMA_MODELS:
-            if ollama_model.model_name in downloaded_models:
-                api_models.append({
-                    "display_name": ollama_model.display_name,
-                    "model_name": ollama_model.model_name,
-                    "provider": "Ollama"
-                })
-        
-        return api_models
+        known_model_names = {
+            ollama_model.model_name: ollama_model.display_name
+            for ollama_model in OLLAMA_MODELS
+        }
+
+        return [
+            {
+                "display_name": known_model_names.get(model_name, model_name),
+                "model_name": model_name,
+                "provider": "Ollama",
+            }
+            for model_name in downloaded_models
+        ]
 
 # Global service instance
 ollama_service = OllamaService() 

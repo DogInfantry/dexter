@@ -7,7 +7,7 @@ import { CardContent } from '@/components/ui/card';
 import { ModelSelector } from '@/components/ui/llm-selector';
 import { useFlowContext } from '@/contexts/flow-context';
 import { useNodeContext } from '@/contexts/node-context';
-import { getModels, LanguageModel } from '@/data/models';
+import { getModels, LANGUAGE_MODELS_UPDATED_EVENT, LanguageModel } from '@/data/models';
 import { useNodeState } from '@/hooks/use-node-state';
 import { cn } from '@/lib/utils';
 import { type AgentNode } from '../types';
@@ -43,17 +43,26 @@ export function AgentNode({
 
   // Load models on mount
   useEffect(() => {
-    const loadModels = async () => {
+    const loadModels = async (forceRefresh = false) => {
       try {
-        const models = await getModels();
+        const models = await getModels(forceRefresh);
         setAvailableModels(models);
       } catch (error) {
         console.error('Failed to load models:', error);
         // Keep empty array as fallback
       }
     };
-    
+
+    const handleModelsUpdated = () => {
+      loadModels(true);
+    };
+
     loadModels();
+    window.addEventListener(LANGUAGE_MODELS_UPDATED_EVENT, handleModelsUpdated);
+
+    return () => {
+      window.removeEventListener(LANGUAGE_MODELS_UPDATED_EVENT, handleModelsUpdated);
+    };
   }, [setAvailableModels]);
 
   // Update the node context when the model changes

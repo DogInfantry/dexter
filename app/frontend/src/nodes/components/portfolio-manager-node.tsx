@@ -7,7 +7,7 @@ import { CardContent } from '@/components/ui/card';
 import { ModelSelector } from '@/components/ui/llm-selector';
 import { useFlowContext } from '@/contexts/flow-context';
 import { useNodeContext } from '@/contexts/node-context';
-import { getDefaultModel, getModels, LanguageModel } from '@/data/models';
+import { getDefaultModel, getModels, LANGUAGE_MODELS_UPDATED_EVENT, LanguageModel } from '@/data/models';
 import { useNodeState } from '@/hooks/use-node-state';
 import { useOutputNodeConnection } from '@/hooks/use-output-node-connection';
 import { cn } from '@/lib/utils';
@@ -52,11 +52,11 @@ export function PortfolioManagerNode({
 
   // Load models on mount
   useEffect(() => {
-    const loadModels = async () => {
+    const loadModels = async (forceRefresh = false) => {
       try {
         const [models, defaultModel] = await Promise.all([
-          getModels(),
-          getDefaultModel()
+          getModels(forceRefresh),
+          getDefaultModel(forceRefresh)
         ]);
         setAvailableModels(models);
         
@@ -70,7 +70,16 @@ export function PortfolioManagerNode({
       }
     };
 
+    const handleModelsUpdated = () => {
+      loadModels(true);
+    };
+
     loadModels();
+    window.addEventListener(LANGUAGE_MODELS_UPDATED_EVENT, handleModelsUpdated);
+
+    return () => {
+      window.removeEventListener(LANGUAGE_MODELS_UPDATED_EVENT, handleModelsUpdated);
+    };
   }, [setAvailableModels, selectedModel, setSelectedModel]);
 
   // Update the node context when the model changes
